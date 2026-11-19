@@ -51,6 +51,25 @@ class AuthService {
             GoogleAuthProvider.credential(idToken: a.idToken, accessToken: a.accessToken));
       });
 
+  /// Quietly signs back in with the Google account already saved on the phone
+  /// (no prompt, no button). Returns true when a Firebase user is signed in
+  /// afterwards. Used at app start so the user only signs in once.
+  static Future<bool> signInGoogleSilently() async {
+    if (_auth.currentUser != null) return true;
+    try {
+      final acc = await _googleIn.signInSilently();
+      if (acc == null) return false;
+      final a = await acc.authentication;
+      final idToken = a.idToken;
+      if (idToken == null) return false;
+      await _auth.signInWithCredential(
+          GoogleAuthProvider.credential(idToken: idToken, accessToken: a.accessToken));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
  static Future<void> signOut() async {
     try {
       await _googleIn.signOut();
